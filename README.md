@@ -6,7 +6,7 @@ Seal your words today, receive them exactly when you choose.
 ## 🚀 Quick Start (Localhost)
 
 ### Prerequisites
-- **Node.js 18+** — [Download here](https://nodejs.org)
+- **Node.js 22.5+** — [Download here](https://nodejs.org)
 - **npm** (comes with Node.js)
 
 ### 1. Start Everything
