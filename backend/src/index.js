@@ -54,6 +54,15 @@ app.get('/api/health', (req, res) => {
   }
 });
 
+// app.get('/api/debug', (req, res) => {
+//   const info = {};
+//   try { info.tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(t => t.name); } catch(e) { info.tables_err = e.message; }
+//   try { info.user_cols = db.prepare('PRAGMA table_info(users)').all().map(c => c.name); } catch(e) { info.user_cols_err = e.message; }
+//   try { info.user_count = db.prepare('SELECT COUNT(*) as c FROM users').get().c; } catch(e) { info.user_count_err = e.message; }
+//   info.node = process.version;
+//   info.platform = process.platform;
+//   res.json(info);
+// });
 app.get('/api/debug', (req, res) => {
   const info = {};
   try { info.tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(t => t.name); } catch(e) { info.tables_err = e.message; }
