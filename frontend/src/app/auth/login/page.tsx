@@ -153,7 +153,7 @@ export default function LoginPage() {
           <div className="mt-4 bg-gold/5 border border-gold/10 rounded-xl p-4">
             <p className="text-gold/60 text-xs font-sans font-medium mb-2 tracking-wider uppercase">Quick demo login</p>
             <div className="space-y-1">
-              <p className="text-parchment/40 text-xs font-mono">Admin: admin@futureme.local / admin123</p>
+              <p className="text-parchment/40 text-xs font-mono">Admin: admin@futureme.local / Admin@123456</p>
             </div>
           </div>
         </div>
