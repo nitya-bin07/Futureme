@@ -11,7 +11,7 @@ router.get('/export', authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const user = db.prepare('SELECT id, email, name, backup_email, created_at, plan FROM users WHERE id = ?').get(userId);
+   const user = db.prepare('SELECT id, email, name, backup_email, created_at FROM users WHERE id = ?').get(userId);
     
     const letters = db.prepare(`
       SELECT id, title, content, delivery_date, recipient_email, recipient_name,
@@ -27,10 +27,10 @@ router.get('/export', authenticate, async (req, res) => {
       ORDER BY dl.sent_at DESC
     `).all(userId);
 
-    const payments = db.prepare(`
-      SELECT id, amount, currency, plan, status, created_at, completed_at
-      FROM payments WHERE user_id = ?
-    `).all(userId);
+    // const payments = db.prepare(`
+    //   SELECT id, amount, currency, plan, status, created_at, completed_at
+    //   FROM payments WHERE user_id = ?
+    // `).all(userId);
 
     const collaborations = db.prepare(`
       SELECT c.invited_email, c.status, c.contribution, c.invited_at, c.accepted_at,
@@ -52,7 +52,7 @@ router.get('/export', authenticate, async (req, res) => {
         tags: JSON.parse(l.tags || '[]'),
       })),
       delivery_history: deliveries,
-      payments,
+      // payments,
       collaborations,
     };
 
