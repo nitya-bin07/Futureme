@@ -14,6 +14,7 @@ const creditsRoutes = require('./routes/credits');
 const analyticsRoutes = require('./routes/analytics');
 const collaboratorsRoutes = require('./routes/collaborators');
 const extraRoutes = require('./routes/extra');
+const gdprRoutes = require('./routes/gdpr');
 const { sendLetterEmail } = require('./services/email');
 const { decrypt } = require('./services/encryption');
 
@@ -35,6 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', 1);
 
 app.use('/api/auth', authRoutes);
+app.use('/api/gdpr', gdprRoutes);
 app.use('/api/letters', lettersRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/credits', creditsRoutes);
