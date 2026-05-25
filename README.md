@@ -45,7 +45,7 @@ npm run dev
 | Field | Value |
 |-------|-------|
 | Email | admin@futureme.local |
-| Password | admin123 |
+| Password | Admin@123456 |
 | Role | Admin |
 
 > ⚠️ **Change the admin password after first login!**
