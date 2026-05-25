@@ -28,8 +28,8 @@ if ! command -v node &> /dev/null; then
 fi
 
 NODE_VER=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-if [ "$NODE_VER" -lt 18 ]; then
-  echo -e "${RED}❌ Node.js 18+ required. Current: $(node -v)${NC}"
+if [ "$NODE_VER" -lt 22 ]; then
+ echo -e "${RED}❌ Node.js 22.5+ required. Current: $(node -v)${NC}"
   exit 1
 fi
 
