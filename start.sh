@@ -36,6 +36,20 @@ fi
 echo -e "${GREEN}✅ Node.js $(node -v)${NC}"
 echo ""
 
+# Check for backend/.env with a DATABASE_URL set
+if [ ! -f "backend/.env" ]; then
+  echo -e "${RED}❌ backend/.env not found.${NC}"
+  echo -e "   Copy .env.example to backend/.env and fill in DATABASE_URL (Postgres) before starting."
+  exit 1
+fi
+if ! grep -q "^DATABASE_URL=postgresql://" backend/.env 2>/dev/null; then
+  echo -e "${RED}❌ DATABASE_URL is missing or not set in backend/.env${NC}"
+  echo -e "   This app now requires PostgreSQL — see .env.example for the format."
+  exit 1
+fi
+echo -e "${GREEN}✅ backend/.env found${NC}"
+echo ""
+
 # Install backend deps
 echo -e "${BLUE}📦 Installing backend dependencies...${NC}"
 cd backend

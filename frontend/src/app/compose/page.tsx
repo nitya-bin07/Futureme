@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { lettersApi } from '@/lib/api';
@@ -43,7 +43,7 @@ const QUICK_DATES = [
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-export default function ComposePage() {
+function ComposePageInner() {
   const { user, loading: authLoading, refreshUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -609,5 +609,17 @@ export default function ComposePage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ComposePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gold/20 border-t-gold rounded-full animate-spin" />
+      </div>
+    }>
+      <ComposePageInner />
+    </Suspense>
   );
 }

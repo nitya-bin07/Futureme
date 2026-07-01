@@ -28,6 +28,9 @@ export const authApi = {
   me: () => api.get('/auth/me'),
   updateProfile: (d: any) => api.put('/auth/profile', d),
   changePassword: (d: any) => api.put('/auth/password', d),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+  verifyResetToken: (token: string) => api.get(`/auth/reset-password/${token}`),
+  resetPassword: (token: string, password: string) => api.post('/auth/reset-password', { token, password }),
 };
 
 export const lettersApi = {
@@ -57,13 +60,6 @@ export const analyticsApi = {
   timeline: () => api.get('/analytics/timeline'),
 };
 
-export const paymentApi = {
-  getPlans: () => api.get('/plans'),
-  checkout: (plan: string) => api.post('/checkout', { plan }),
-  confirmPayment: (id: string) => api.post(`/payment/success/${id}`),
-  getHistory: () => api.get('/payments'),
-};
-
 export const adminApi = {
   stats: () => api.get('/admin/stats'),
   users: (p?: any) => api.get('/admin/users', { params: p }),
@@ -76,9 +72,9 @@ export const adminApi = {
 export default api;
 
 export const creditsApi = {
-  packages: () => api.get('/credits/packages'),          // public - no auth needed
-  balance: () => api.get('/credits/balance'),             // auth required
-  purchase: (packageId: string) => api.post('/credits/purchase', { package_id: packageId }),
-  confirm: (transactionId: string) => api.post(`/credits/confirm/${transactionId}`),
+  packages: () => api.get('/credits/packages'),
+  balance: () => api.get('/credits/balance'),
+  checkout: (packageId: string) => api.post('/credits/checkout', { package_id: packageId }),
+  checkoutStatus: (sessionId: string) => api.get(`/credits/checkout/${sessionId}/status`),
   transactions: () => api.get('/credits/transactions'),
 };

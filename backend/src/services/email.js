@@ -203,4 +203,59 @@ async function sendCollaborationInvite(toEmail, inviterName, letterTitle, token)
   return info;
 }
 
-module.exports = { sendLetterEmail, sendWelcomeEmail, sendCollaborationInvite };
+async function sendPasswordResetEmail(user, token) {
+  const t = await getTransporter();
+  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/reset-password/${token}`;
+
+  const html = `
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body{margin:0;padding:0;background:#0d0d14;font-family:'Lato',sans-serif;}
+  .w{max-width:580px;margin:0 auto;padding:40px 20px;}
+  .logo{font-size:24px;color:#c9a96e;text-align:center;padding:30px 0;letter-spacing:0.1em;}
+  .box{background:#16161f;border:1px solid #2a2a3e;border-radius:12px;padding:40px;margin:20px 0;}
+  .title{color:#f5f0e8;font-size:22px;margin-bottom:16px;font-weight:400;}
+  .body{color:#b8b4ae;font-size:15px;line-height:1.8;}
+  .btn{display:inline-block;background:#c9a96e;color:#0d0d14;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;margin:24px 0;letter-spacing:0.02em;}
+  .link{color:#c9a96e;word-break:break-all;font-size:13px;}
+  .footer{text-align:center;color:#444;font-size:12px;padding:20px 0;line-height:1.8;}
+</style></head><body>
+<div class="w">
+  <div class="logo">✉ FutureMe</div>
+  <div class="box">
+    <div class="title">Reset your password</div>
+    <div class="body">
+      Hi <strong style="color:#c9a96e;">${user.name}</strong>,<br><br>
+      We received a request to reset the password for your FutureMe account
+      (<strong>${user.email}</strong>). Click the button below to choose a new one.
+      <br><br>
+      This link expires in <strong style="color:#f5f0e8;">1 hour</strong>. If you didn't
+      request this, you can safely ignore this email — your password will stay unchanged.
+    </div>
+    <div style="text-align:center">
+      <a href="${resetUrl}" class="btn">Reset Password →</a>
+    </div>
+    <div class="body" style="font-size:13px;color:#666;">
+      Or copy this link into your browser:<br>
+      <span class="link">${resetUrl}</span>
+    </div>
+  </div>
+  <div class="footer">© ${new Date().getFullYear()} FutureMe. Letters to the future.</div>
+</div>
+</body></html>`;
+
+  const info = await t.sendMail({
+    from: `"FutureMe" <${process.env.EMAIL_FROM || 'noreply@futureme.app'}>`,
+    to: user.email,
+    subject: '🔑 Reset your FutureMe password',
+    html,
+    text: `Reset your FutureMe password: ${resetUrl} (expires in 1 hour)`,
+  });
+
+  const previewUrl = nodemailer.getTestMessageUrl(info);
+  if (previewUrl) console.log('📧 Password reset preview:', previewUrl);
+  return info;
+}
+
+module.exports = { sendLetterEmail, sendWelcomeEmail, sendCollaborationInvite, sendPasswordResetEmail };

@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { creditsApi } from '@/lib/api';
 import Navbar from '@/components/Navbar';
@@ -25,13 +26,15 @@ const FAQ = [
   { q: 'Do credits expire?', a: 'Never. Credits stay in your account forever and can be used whenever you want.' },
   { q: 'What counts as one letter?', a: 'One letter equals one message scheduled for future delivery. There is no word count limit.' },
   { q: 'Is my first letter really free?', a: 'Yes. Every new account gets 1 free credit on signup with no credit card required.' },
-  { q: 'When will payments be live?', a: 'This is a local development build. In production, clicking Buy connects to Stripe Checkout for secure one-time payment processing. No subscriptions ever.' },
+  { q: 'How do payments work?', a: 'Clicking Buy takes you to Stripe Checkout, a secure page hosted by Stripe — we never see or store your card details. One-time payments only, no subscriptions ever.' },
   { q: 'Can I send the same letter to multiple people?', a: 'Each delivery uses one credit. Sending the same message to 3 people costs 3 credits.' },
   { q: 'Can I get a refund?', a: 'If a letter fails to deliver and we cannot retry successfully, the credit is returned to your account automatically.' },
 ];
 
-export default function PricingPage() {
+function PricingPageInner() {
   const { user, refreshUser } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<string | null>(null);
@@ -41,6 +44,34 @@ export default function PricingPage() {
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => { load(); }, [user]);
+
+  useEffect(() => {
+    const checkoutResult = searchParams.get('checkout');
+    const sessionId = searchParams.get('session_id');
+
+    if (checkoutResult === 'success' && sessionId && user) {
+      let attempts = 0;
+      const poll = async () => {
+        attempts++;
+        try {
+          const r = await creditsApi.checkoutStatus(sessionId);
+          if (r.data.status === 'completed') {
+            setSuccess(`${r.data.credits} credit${r.data.credits > 1 ? 's' : ''} added to your account!`);
+            await refreshUser();
+            load();
+            return;
+          }
+        } catch (e) {}
+        if (attempts < 6) setTimeout(poll, 1500);
+        else setSuccess("Payment received! Your credits will appear shortly.");
+      };
+      poll();
+      router.replace('/pricing');
+    } else if (checkoutResult === 'cancelled') {
+      setErr('Checkout was cancelled. No charge was made.');
+      router.replace('/pricing');
+    }
+  }, [searchParams, user]);
 
   async function load() {
     try {
@@ -65,14 +96,10 @@ export default function PricingPage() {
     setErr('');
     setSuccess('');
     try {
-      const r1 = await creditsApi.purchase(pkg.id);
-      const r2 = await creditsApi.confirm(r1.data.transaction_id);
-      setSuccess(r2.data.message + ' Your balance is now ' + r2.data.new_balance + ' credits.');
-      await refreshUser();
-      load();
+      const r = await creditsApi.checkout(pkg.id);
+      window.location.href = r.data.checkout_url;
     } catch(e: any) {
-      setErr(e?.response?.data?.error || 'Purchase failed. Please try again.');
-    } finally {
+      setErr(e?.response?.data?.error || 'Could not start checkout. Please try again.');
       setBuying(null);
     }
   }
@@ -96,7 +123,7 @@ export default function PricingPage() {
 
         {user && (
           <div className="flex justify-center mb-10">
-            <Link href="/pricing" className={`flex items-center gap-3 rounded-2xl border px-6 py-3.5
+            <div className={`flex items-center gap-3 rounded-2xl border px-6 py-3.5
               ${(user.letter_credits || 0) === 0 ? 'bg-red-500/5 border-red-500/20' : (user.letter_credits || 0) <= 2 ? 'bg-amber-500/5 border-amber-500/20' : 'bg-[#16161f] border-[#2a2a3e]'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border
                 ${(user.letter_credits || 0) === 0 ? 'bg-red-500/10 text-red-400 border-red-500/20' : (user.letter_credits || 0) <= 2 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-gold/10 text-gold border-gold/20'}`}>
@@ -104,11 +131,11 @@ export default function PricingPage() {
               </div>
               <div>
                 <p className="text-parchment text-sm font-sans font-medium">
-                  {(user.letter_credits || 0) === 0 ? 'No credits remaining' : (user.letter_credits || 0) === 1 ? '1 letter credit remaining' : (user.letter_credits || 0) + ' letter credits remaining'}
+                  {(user.letter_credits || 0) === 0 ? 'No credits remaining' : (user.letter_credits || 0) === 1 ? '1 letter credit remaining' : `${user.letter_credits} letter credits remaining`}
                 </p>
                 <p className="text-parchment/30 text-xs font-sans">Credits never expire</p>
               </div>
-            </Link>
+            </div>
           </div>
         )}
 
@@ -130,11 +157,12 @@ export default function PricingPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
-              {packages.map((pkg, i) => {
+              {packages.map((pkg) => {
                 const st = STYLES[pkg.id] || STYLES.pkg_1;
                 const Icon = ICONS[pkg.id] || Feather;
                 const isBuying = buying === pkg.id;
-                const perLetter = (pkg.price / pkg.credits).toFixed(2);
+                const priceNum = Number(pkg.price);
+                const perLetter = (priceNum / pkg.credits).toFixed(2);
                 const isHighlight = pkg.id === 'pkg_12';
 
                 return (
@@ -144,19 +172,16 @@ export default function PricingPage() {
                         <span className={`px-3 py-1 rounded-full text-xs font-sans font-semibold border bg-[#0d0d14] ${st.border} ${st.text}`}>{pkg.badge}</span>
                       </div>
                     )}
-
                     <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-4 ${st.border}`}>
                       <Icon size={18} className={st.text} />
                     </div>
-
                     <h3 className="font-display text-xl text-parchment mb-1">{pkg.name}</h3>
                     <div className="flex items-baseline gap-1 mb-1">
                       <span className="text-parchment/40 text-sm font-sans">$</span>
-                      <span className="font-display text-3xl text-parchment">{pkg.price.toFixed(2)}</span>
+                      <span className="font-display text-3xl text-parchment">{priceNum.toFixed(2)}</span>
                     </div>
                     <p className={`text-xs font-sans mb-1 ${st.text}`}>{pkg.credits} letter{pkg.credits > 1 ? 's' : ''}</p>
                     <p className="text-parchment/25 text-xs font-sans mb-5">${perLetter} per letter</p>
-
                     <ul className="space-y-2 flex-1 mb-6">
                       {[
                         'Credits never expire',
@@ -172,7 +197,6 @@ export default function PricingPage() {
                         </li>
                       ))}
                     </ul>
-
                     <button
                       onClick={() => handleBuy(pkg)}
                       disabled={isBuying}
@@ -278,5 +302,25 @@ export default function PricingPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+function PricingPageLoading() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-1 pt-24 pb-16 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gold/20 border-t-gold rounded-full animate-spin" />
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={<PricingPageLoading />}>
+      <PricingPageInner />
+    </Suspense>
   );
 }

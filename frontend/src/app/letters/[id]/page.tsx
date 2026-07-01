@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
@@ -14,7 +14,7 @@ const MOODS: Record<string, string> = {
   '✨': 'Inspired', '🙏': 'Grateful'
 };
 
-export default function LetterPage() {
+function LetterPageInner() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
@@ -151,7 +151,7 @@ export default function LetterPage() {
                           {locking ? <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> : <><Lock size={13} />Seal</>}</button>
                         <Link href={`/letters/preview?id=${letter.id}`} className="btn-ghost text-xs py-1.5 px-3 text-parchment/40 hover:text-parchment">
                           <Eye size={13} />Preview
-                        </button>
+                        </Link>
                         <button onClick={handleDelete} className="btn-ghost text-xs py-1.5 px-3 text-red-400/50 hover:text-red-400">
                           <Trash2 size={13} />
                         </button>
@@ -277,5 +277,17 @@ export default function LetterPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function LetterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+      </div>
+    }>
+      <LetterPageInner />
+    </Suspense>
   );
 }
