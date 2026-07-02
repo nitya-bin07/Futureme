@@ -1,5 +1,7 @@
 # ✉️ FutureMe — Letters to Your Future Self
 
+[🌐 Live Demo](https://futureme-tan.vercel.app/) · **[📁 GitHub](https://github.com/nitya-bin07/Futureme)
+
 A full-stack web application for writing letters to your future self. Write today, receive them exactly when you choose — 6 months, 5 years, or 30 years from now.
 
 ---
@@ -54,6 +56,7 @@ A full-stack web application for writing letters to your future self. Write toda
 | Frontend | Next.js 14 (App Router), TypeScript, Tailwind CSS, Tiptap, Framer Motion, Axios |
 | Backend | Express.js, Node.js, node-cron, bcryptjs, JWT |
 | Database | **PostgreSQL** (via `pg`) — hosted on [Neon](https://neon.tech) |
+| Hosting | Railway (backend) + Vercel (frontend) |
 | Payments | **Stripe Checkout** + Stripe webhooks |
 | Email | Nodemailer → Ethereal (dev) or Gmail / Resend (production) |
 | Security | AES-256-GCM encryption, bcrypt, Helmet, rate limiting |
